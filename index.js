@@ -1,4 +1,6 @@
 import puppeteer from "puppeteer";
+import converter from 'json-2-csv';
+import fs from 'fs';
 
 const run = async () => {
   const browser = await puppeteer.launch({
@@ -25,8 +27,6 @@ const run = async () => {
 
   console.log(btn);
 
-  //   const reviewBtn = await page.evaluate(() => Array.from(document.querySelectorAll('div > button > div.daaa8ff09f  > span > span'), (e) => e.innerHTML));
-  //   console.log(reviewBtn);
 
   await Promise.all([
     // Remove the `await` keyword before `page.click()`
@@ -35,17 +35,7 @@ const run = async () => {
     page.waitForNavigation({ waitUntil: "networkidle2" }),
   ]);
 
-  //   const dd = await page.$eval(
-  //     "div.b1e6dd8416.aacd9d0b0a.b48795b3df > div.b5cd09854e.f0d4d6a2f5.e46e88563a",
-  //     (element) => {
-  //       return element ? element.innerText : null;
-  //     }
-  //   );
-  //   console.log("dd Name: ", dd);
 
-  // Get an array of ElementHandles for the review boxes
-  //   const reviewBoxes = await page.$$('div > div.c-guest-with-score__guest > div > div.bui-avatar-block__text > span.bui-avatar-block__title')
-  //   console.log(reviewBoxes);
 
   const reviewBox = await page.$$eval(
     "#review_list_page_container > ul > li.review_list_new_item_block",
@@ -56,17 +46,6 @@ const run = async () => {
 
   console.log(reviewBox.length);
 
-
-// const reviews = await page.$$eval('#review_list_page_container > ul > li.review_list_new_item_block', (elements) =>
-//   elements.map((e) => ({
-    
-//     author: e.querySelector('div.bui-grid__column-3.c-review-block__left > div.c-review-block__row.c-review-block__guest > div > div.bui-avatar-block__text > span.bui-avatar-block__title').innerText,
-
-//     authorCountry: e.querySelector('div.bui-grid__column-3.c-review-block__left > div.c-review-block__row.c-review-block__guest > div > div.bui-avatar-block__text > span.bui-avatar-block__subtitle').innerText,
-
-    
-//   }))
-// );
 
 const reviews = await page.$$eval('#review_list_page_container > ul > li.review_list_new_item_block', (elements) =>
   elements.map((e) => {
@@ -151,8 +130,7 @@ const reviews = await page.$$eval('#review_list_page_container > ul > li.review_
     return preprocessedReviews;
   };
   
-  
-  
+
 
 
 const getReviewRating = () => {
@@ -179,51 +157,13 @@ const getReviewRating = () => {
 
 console.log(reviews);
 
-  // const reviewBtn1 = await page.evaluate(() => Array.from(document.querySelectorAll('#review_list_page_container > ul > li.review_list_new_item_block'), (e) => e.innerHTML));
-
-  // console.log(reviewBtn1.length);
-
-  // Initialize an array to store the extracted reviews
-  //   const reviews = [];
-
-  // for await (const reviews of reviewBox){
-  //     const data = {};
-
-  //     const author = "";
-  //     try{
-
-  //         author = await page.evaluate(
-  //             (el) => el.querySelector("div > div.bui-grid > div.bui-grid__column-3.c-review-block__left > div.c-review-block__row.c-review-block__guest > div > div.bui-avatar-block__text > span.bui-avatar-block__title").textContent,
-  //             reviews
-  //         );
-
-  //     }
-  //     catch(err){}
-  //     console.log(author);
-
-  //     // console.log(data);
-
-  // }
-
-//   for (let i = 0; i < reviewBox.length; i++) {
-    // author = await page.evaluate(
-    //   (el) =>
-    //     el.querySelector(
-    //       `#review_list_page_container > ul > li:nth-child(${i}) > div > div.bui-grid > div.bui-grid__column-3.c-review-block__left > div.c-review-block__row.c-review-block__guest > div > div.bui-avatar-block__text > span.bui-avatar-block__title`
-    //     ).textContent,
-
-    // );
-
-//     const authorName = await page.$eval(`div > div.bui-grid > div.bui-grid__column-3.c-review-block__left > div.c-review-block__row.c-review-block__guest > div > div.bui-avatar-block__text > span.bui-avatar-block__title`, (element) => {
-//         return element ? element.innerText : null;
-//       });
-
-//     console.log(authorName);
-//   }
+fs.writeFile('reviews.json', JSON.stringify(reviews), (err) => {
+  if (err) throw err;
+  console.log('File saved');
+});
 
 
-
-  //   await browser.close();
+  await browser.close();
 };
 
 run();
