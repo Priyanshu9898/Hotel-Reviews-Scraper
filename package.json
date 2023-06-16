@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "json-2-csv": "^4.0.0",
     "nodemon": "^2.0.22",
     "puppeteer": "^20.7.1"
   }

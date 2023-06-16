@@ -78,18 +78,101 @@ const reviews = await page.$$eval('#review_list_page_container > ul > li.review_
       }
     };
 
+
     const getAuthorCountry = () => {
+      try{
+          return e.querySelector('div.bui-grid > div.bui-grid__column-3.c-review-block__left > div.c-review-block__row.c-review-block__guest > div > div.bui-avatar-block__text > span.bui-avatar-block__subtitle').innerText;
+      }
+      catch (err) {
+          return "";
+      }
+  }
+
+    const getReviewDate = () => {
         try{
-            return e.querySelector('div.bui-grid__column-3.c-review-block__left > div.c-review-block__row.c-review-block__guest > div > div.bui-avatar-block__text > span.bui-avatar-block__subtitle').innerText;
+            return e.querySelector('div.bui-grid__column-3.c-review-block__left > ul.bui-list.bui-list--text.bui-list--icon.bui_font_caption.c-review-block__row.c-review-block__stay-date > li > div > span').innerText;
         }
         catch (err) {
             return "";
         }
     }
 
+    const getRoomType = () => {
+        try{
+            return e.querySelector('div.bui-grid__column-3.c-review-block__left > div.c-review-block__row.c-review-block__room-info-row.review-block__room-info--disabled > ul > li > a > div').innerText;
+        }
+        catch (err) {
+            return "";
+        }
+    }
+
+    const getStayType = () => {
+        try{
+            return e.querySelector('div.bui-grid__column-3.c-review-block__left > ul.bui-list.bui-list--text.bui-list--icon.bui_font_caption.review-panel-wide__traveller_type.c-review-block__row > li > div').innerText;
+        }
+        catch (err) {
+            return "";
+        }
+    }
+
+    const getReviewTitle = () => {
+      try{
+          return e.querySelector('div.bui-grid > div.bui-grid__column-9.c-review-block__right > div:nth-child(1) > div > div.bui-grid__column-11 > h3').innerText;
+      }
+      catch (err) {
+          return "";
+      }
+  }
+
+  const getReviewsContent = () => {
+    const reviews = [];
+    let index = 1;
+    let reviewElement = e.querySelector(`div > div.bui-grid > div.bui-grid__column-9.c-review-block__right > div:nth-child(${index})`);
+  
+    while (reviewElement) {
+      const reviewContent = reviewElement.innerText.replace(/\n/g, ' ').trim();
+      reviews.push(reviewContent);
+      index++;
+      reviewElement = e.querySelector(`div > div.bui-grid > div.bui-grid__column-9.c-review-block__right > div:nth-child(${index})`);
+    }
+  
+    const preprocessedReviews = reviews.reduce((acc, review) => {
+      if (review.includes('Liked')) {
+        acc.liked += ' ' + review.split('Liked')[1].replace(/\s+/g, ' ').trim();
+      }
+      if (review.includes('Disliked')) {
+        acc.disliked += ' ' + review.split('Disliked')[1].replace(/\s+/g, ' ').trim();
+      }
+      return acc;
+    }, { liked: '', disliked: '' });
+  
+    console.log(preprocessedReviews);
+  
+    return preprocessedReviews;
+  };
+  
+  
+  
+
+
+const getReviewRating = () => {
+  try{
+      return e.querySelector('div > div.bui-grid__column-1.bui-u-text-right > div > div').innerText;
+  }
+  catch (err) {
+      return "";
+  }
+}
+
     return {
       author: getAuthor(),
       authorCountry: getAuthorCountry(),
+      date: getReviewDate(),
+      roomType: getRoomType(),
+      stayType: getStayType(),
+      reviewTitle: getReviewTitle(),
+      reviewContent: getReviewsContent(),
+      rating: getReviewRating()
     };
   })
 );
