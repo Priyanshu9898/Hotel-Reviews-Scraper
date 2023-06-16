@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "nodemon agodaScraper.js"
+    "dev": "nodemon googleReviewScraper.js"
   },
   "keywords": [],
   "author": "",

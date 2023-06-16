@@ -1,52 +1,15 @@
 import puppeteer from "puppeteer";
-import fs from 'fs';
+import fs from "fs";
 
-// const convertToCSV = (reviews, hotelName, hotelAddress, hotelRating) => {
-//     const headers = [
-//       "hotelName",
-//       "hotelAddress",
-//       "hotelRating",
-//       "Review Author",
-//       "authorCountry",
-//       "stayTime",
-//       "roomType",
-//       "stayType",
-//       "date",
-//       "Year",
-//       "rating",
-//       "reviewTitle",
-//       "reviewContent",
-//       "response",
-//     ];
-  
-//     const rows = reviews.map((review, index) => [
-//         index === 0 ? hotelName : "",
-//         index === 0 ?  `"${hotelAddress.replace(/"/g, '""')}"` : "",
-//         index === 0 ? hotelRating : "",
-//         ...Object.values(review),
-//       ]);
-  
-//     const csv = [headers, ...rows]
-//       .map((row) => row.join(","))
-//       .join("\n");
-  
-//     return csv;
-//   };
-  
 const convertToCSV = (reviews, hotelName, hotelAddress, hotelRating) => {
     const headers = [
       'Hotel Name',
       'Hotel Address',
       'Hotel Rating',
-      'Author',
-      'Author Country',
-      'Stay Time',
-      'Room Type',
+      'Review Author',
       'Stay Type',
-      'Date',
       'Rating',
-      'Review Title',
-      'Review Content',
+      'Review',
       'Response',
     ];
   
@@ -59,13 +22,8 @@ const convertToCSV = (reviews, hotelName, hotelAddress, hotelRating) => {
     const csvRows = reviews.map((review, index) => {
       const reviewData = [
         review.author,
-        review.authorCountry,
-        review.stayTime,
-        review.roomType,
         review.stayType,
-        review.date,
         review.rating,
-        review.reviewTitle,
         review.reviewContent,
         review.response,
       ].map((value) => `"${value.replace(/"/g, '""')}"`).join(',');
@@ -82,68 +40,77 @@ const convertToCSV = (reviews, hotelName, hotelAddress, hotelRating) => {
   
 
 
-
 const run = async () => {
     const browser = await puppeteer.launch({
-        headless: 'new',
+        headless: false,
         defaultViewport: false,
     });
 
     const page = await browser.newPage();
 
-    await page.goto('https://www.agoda.com/en-in/lords-plaza-surat/hotel/surat-in.html?finalPriceView=1&isShowMobileAppPrice=false&cid=1844104&numberOfBedrooms=&familyMode=false&adults=2&children=0&rooms=1&maxRooms=0&checkIn=2023-06-22&isCalendarCallout=false&childAges=&numberOfGuest=0&missingChildAges=false&travellerType=1&showReviewSubmissionEntry=false&currencyCode=INR&isFreeOccSearch=false&isCityHaveAsq=false&tspTypes=7,2&los=1&searchrequestid=ada149a8-3719-45b8-a69f-429b34aa3526');
+    await page.goto('https://www.google.com/travel/search?q=lords%20plaza%20surat&g2lb=2502548%2C2503771%2C2503781%2C4258168%2C4270442%2C4284970%2C4291517%2C4306835%2C4597339%2C4757164%2C4814050%2C4850738%2C4864715%2C4874190%2C4886480%2C4893075%2C4924070%2C4965990%2C4985712%2C4990494%2C72248281%2C72271797%2C72272556%2C72279293%2C72280386%2C72281254%2C72286089&hl=en-IN&gl=in&ssta=1&ts=CAESABpJCikSJzIlMHgzYmUwNGVmODA0Mzc4NWRiOjB4NDc1M2RhNmE1OTU3ZDU5YhIcEhQKBwjnDxAGGBASBwjnDxAGGBEYATIECAAQACoHCgU6A0lOUg&qs=CAEyJENoY0ltNnZmeXFYTjlxbEhHZ3N2Wnk4eGRuSXhkak0xYWhBQjgCQgsJm9VXWWraU0cYAUILCZvVV1lq2lNHGAE&ap=ugEIb3ZlcnZpZXc&ictx=1');
 
-    // const html = await page.content();
-    // console.log(html);
-    
-    const hotelName = await page.$eval("div.HeaderCerebrum > div > p.HeaderCerebrum__Name", (element) => {
+
+    // Update the selector for the button
+    const btnSelector = "#reviews > span";
+    const btn = await page.$eval(btnSelector, (element) => {
+        return element ? element.innerText : null;
+    });
+
+    console.log(btn);
+
+
+    await Promise.all([
+        // Remove the `await` keyword before `page.click()`
+        page.click(btnSelector),
+        console.log("page clicked"),
+        page.waitForNavigation({ waitUntil: "networkidle2" }),
+    ]);
+
+
+    const hotelName = await page.$eval("c-wiz > div > h1", (element) => {
         return element ? element.innerText : null;
       });
     console.log("Hotel Name: ", hotelName);
 
-    const hotelRating = await page.$eval(" div > p.sc-kEjbxe.sc-iqHYGH.DGKby.fKlkAa", (element) => {
+    const hotelRating = await page.$eval("div > div > div.zhMoVd.nNUNpc > div.FBsWCd", (element) => {
         return element ? element.innerText : null;
       });
     console.log("Hotel Rating: ", hotelRating);
 
 
 
-    const totalReviews = await page.$eval("div > span.text > p", (element) => {
-        return element ? element.innerText : null;
+    const totalReviews = await page.$eval("div > div.B2PODc > span.ta47le.sdhtLe > span > span.jdzyld.XLC8M", (element) => {
+        return element ? element.innerText.trim().slice(1, -1) : null;
       });
     console.log("Total Reviews: ", totalReviews);
 
-    // div.HeaderCerebrum > div.HeaderCerebrum__Location > span.Spanstyled__SpanStyled-sc-16tp9kb-0.gwICfd.kite-js-Span.HeaderCerebrum__Address
 
 
-    const hotelAddress = await page.$eval("div.HeaderCerebrum > div.HeaderCerebrum__Location > span.Spanstyled__SpanStyled-sc-16tp9kb-0.gwICfd.kite-js-Span.HeaderCerebrum__Address", (element) => {
+    const hotelAddress = await page.$eval("section > div.OGAsq > div:nth-child(1) > div > div.K4nuhf > span:nth-child(1)", (element) => {
         return element ? element.innerText : null;
       });
     console.log("Hotel Address:", hotelAddress);
 
-    
-    const hotelDescription = await page.$eval("div.HeaderCerebrum > div.Box-sc-kv6pi1-0.cYZaSy > div > p", (element) => {
-        return element ? element.innerText : null;
-      });
-    console.log("About:", hotelDescription);
-
-
     const reviewBox = await page.$$eval(
-        "div#reviewSectionComments > div.Review-comment",
+        "#reviews > c-wiz > c-wiz > div > div > div > div > div.v85cbc > c-wiz > div:nth-child(1) > div > div > div.Svr5cf.bKhjM",
         (elements) => {
           return elements.map((element) => element.innerHTML);
         }
       );
     
       console.log(reviewBox.length);
+        
+        const reviewSelector = "#reviews > c-wiz > c-wiz > div > div > div > div > div.v85cbc > c-wiz > div:nth-child(1) > div > div > div.Svr5cf.bKhjM";
 
-
-
-      const reviews = await page.$$eval('div#reviewSectionComments > div.Review-comment', (elements) =>
+      const reviews = await page.$$eval(reviewSelector, (elements) =>
       elements.map((e) => {
         const getAuthor = () => {
           try {
-            return e.querySelector('div.Review-comment-left > div > div > strong').innerText;
+
+            
+            return e.querySelector('div.aAs4ib > div.jUkSGf.WwUTAf > span > a').innerText;;
+            
           } catch (err) {
             return "";
           }
@@ -188,7 +155,7 @@ const run = async () => {
     
         const getStayType = () => {
             try{
-                return e.querySelector('div.Review-comment-left > div > div:nth-child(3) > span').innerText;
+                return e.querySelector('div.ThUm5b').innerText;
             }
             catch (err) {
                 return "";
@@ -208,7 +175,7 @@ const run = async () => {
        
       const getReviewsContent = () => {
         try{
-            return e.querySelector('div.Review-comment-right > div.Review-comment-bubble > div.Review-comment-body > p').innerText;
+            return e.querySelector('div.STQFb > div.K7oBsc > div > span').innerText;
         }
         catch (err) {
             return "";
@@ -217,7 +184,7 @@ const run = async () => {
       
       const getResponse = () => {
         try {
-          const responseElement = e.querySelector('div.Review-comment-right > div.Review-response');
+          const responseElement = e.querySelector('div.lU7Ape > div');
           return responseElement ? responseElement.innerText.replace(/\n+/g, ' ').trim() : "";
         } catch (err) {
           return "";
@@ -227,7 +194,7 @@ const run = async () => {
     
     const getReviewRating = () => {
       try{
-          return e.querySelector('div.Review-comment-left > div > div.Review-comment-leftHeader > div.Review-comment-leftScore').innerText;
+          return e.querySelector('div.aAs4ib > div.GDWaad').innerText.split("/")[0];
       }
       catch (err) {
           return "";
@@ -236,13 +203,13 @@ const run = async () => {
     
         return {
           author: getAuthor(),
-          authorCountry: getAuthorCountry(),
-          stayTime: getTime(),
-          roomType: getRoomType(),
+        //   authorCountry: getAuthorCountry(),
+        //   stayTime: getTime(),
+        //   roomType: getRoomType(),
           stayType: getStayType(),
-          date: getReviewDate(),
+        //   date: getReviewDate(),
           rating: getReviewRating(),
-          reviewTitle: getReviewTitle(),
+        //   reviewTitle: getReviewTitle(),
           reviewContent: getReviewsContent(),
           response: getResponse(),
         };
@@ -252,10 +219,10 @@ const run = async () => {
     console.log(reviews);
 
     const csvData = await convertToCSV(reviews, hotelName, hotelAddress, hotelRating);
-    fs.writeFileSync(`./output/${hotelName}_Agoda.csv`, csvData);
+    fs.writeFileSync(`./output/${hotelName}_GoogleReviews.csv`, csvData);
+
 
     await browser.close();
-};
-
+}
 
 run();

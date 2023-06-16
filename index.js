@@ -1,6 +1,64 @@
 import puppeteer from "puppeteer";
-import converter from 'json-2-csv';
 import fs from 'fs';
+
+const convertToCSV = (reviews, hotelName, hotelAddress, hotelRating) => {
+  const headers = [
+    'Hotel Name',
+    // 'Hotel Address',
+    // 'Hotel Rating',
+    'Review Author',
+    'Author Country',
+    'Date',
+    'Room Type',
+    'Stay Type',
+    'Rating',
+    'Review Title',
+    'Review Content Liked',
+    'Review Content DisLiked',
+  ];
+
+  const hotelInfo = [
+    `"${hotelName.replace(/"/g, '""')}"`,
+    // `"${hotelAddress.replace(/"/g, '""')}"`,
+    // `"${hotelRating.replace(/"/g, '""')}"`,
+  ];
+
+  // author: 'Borzooj',
+  // authorCountry: ' Iran',
+  // date: 'September 2022',
+  // roomType: 'Deluxe Room, Guest room, 1 King, City view',
+  // stayType: 'Solo traveller',
+  // reviewTitle: 'Superb',
+  // reviewContentLiked: ' · the breakfast and restaurant for dinner was very nice.',
+  // reviewContentDisLiked: '',
+  // rating: 
+
+  const csvRows = reviews.map((review, index) => {
+    const reviewData = [
+      review.author,
+      review.authorCountry,
+      review.date,
+      review.roomType,
+      review.stayType,
+      review.rating,
+      review.reviewTitle,
+      review.reviewContentLiked,
+      review.reviewContentDisLiked,
+    ].map((value) => `"${value.replace(/"/g, '""')}"`).join(',');
+
+    if (index === 0) {
+      return `${hotelInfo.join(',')},${reviewData}`;
+    } else {
+      return ['', ...reviewData.split(',')].join(',');
+    }
+  });
+
+  return `${headers.join(',')}\n${csvRows.join('\n')}`;
+};
+
+
+  
+  
 
 const run = async () => {
   const browser = await puppeteer.launch({
@@ -149,7 +207,8 @@ const getReviewRating = () => {
       roomType: getRoomType(),
       stayType: getStayType(),
       reviewTitle: getReviewTitle(),
-      reviewContent: getReviewsContent(),
+      reviewContentLiked: getReviewsContent().liked,
+      reviewContentDisLiked: getReviewsContent().disliked,
       rating: getReviewRating()
     };
   })
@@ -157,11 +216,10 @@ const getReviewRating = () => {
 
 console.log(reviews);
 
-fs.writeFile('reviews.json', JSON.stringify(reviews), (err) => {
-  if (err) throw err;
-  console.log('File saved');
-});
 
+
+  const csvData = await convertToCSV(reviews, hotelName);
+  fs.writeFileSync(`./output/${hotelName}_Booking.csv`, csvData);
 
   await browser.close();
 };
