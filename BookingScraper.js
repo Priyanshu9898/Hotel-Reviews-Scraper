@@ -1,11 +1,12 @@
 import puppeteer from "puppeteer";
 import fs from 'fs';
 
-const convertToCSV = (reviews, hotelName, hotelAddress, hotelRating) => {
+const convertToCSV = (reviews, hotelName, hotelAddress, hotelRating, hotelDescription) => {
   const headers = [
     'Hotel Name',
-    // 'Hotel Address',
-    // 'Hotel Rating',
+    'Hotel Address',
+    'Hotel Rating',
+    'Hotel Description',
     'Review Author',
     'Author Country',
     'Date',
@@ -19,8 +20,9 @@ const convertToCSV = (reviews, hotelName, hotelAddress, hotelRating) => {
 
   const hotelInfo = [
     `"${hotelName.replace(/"/g, '""')}"`,
-    // `"${hotelAddress.replace(/"/g, '""')}"`,
-    // `"${hotelRating.replace(/"/g, '""')}"`,
+    `"${hotelAddress.replace(/"/g, '""')}"`,
+    `"${hotelRating.replace(/"/g, '""')}"`,
+    `"${hotelDescription.replace(/"/g, '""')}"`,
   ];
 
   // author: 'Borzooj',
@@ -49,7 +51,7 @@ const convertToCSV = (reviews, hotelName, hotelAddress, hotelRating) => {
     if (index === 0) {
       return `${hotelInfo.join(',')},${reviewData}`;
     } else {
-      return ['', ...reviewData.split(',')].join(',');
+      return ['', '', '', '', ...reviewData.split(',')].join(',');
     }
   });
 
@@ -62,7 +64,7 @@ const convertToCSV = (reviews, hotelName, hotelAddress, hotelRating) => {
 
 const run = async () => {
   const browser = await puppeteer.launch({
-    headless: false,
+    headless: 'new',
     defaultViewport: false,
   });
 
@@ -76,6 +78,34 @@ const run = async () => {
     return element ? element.innerText : null;
   });
   console.log("Hotel Name: ", hotelName);
+
+
+
+  const hotelRating = await page.$eval("button > div > div > div.b5cd09854e.d10a6220b4", (element) => {
+    return element ? element.innerText : null;
+  });
+console.log("Hotel Rating: ", hotelRating);
+
+
+
+// const totalReviews = await page.$eval("div > span.text > p", (element) => {
+//     return element ? element.innerText : null;
+//   });
+// console.log("Total Reviews: ", totalReviews);
+
+// div.HeaderCerebrum > div.HeaderCerebrum__Location > span.Spanstyled__SpanStyled-sc-16tp9kb-0.gwICfd.kite-js-Span.HeaderCerebrum__Address
+
+
+const hotelAddress = await page.$eval("span.hp_address_subtitle.js-hp_address_subtitle.jq_tooltip", (element) => {
+    return element ? element.innerText : null;
+  });
+console.log("Hotel Address:", hotelAddress);
+
+
+const hotelDescription = await page.$eval("#property_description_content > div:nth-child(3) > p", (element) => {
+    return element ? element.innerText : null;
+  });
+console.log("About:", hotelDescription);
 
   // Update the selector for the button
   const btnSelector = "div > button > div.daaa8ff09f  > span > span";
@@ -218,7 +248,7 @@ console.log(reviews);
 
 
 
-  const csvData = await convertToCSV(reviews, hotelName);
+  const csvData = await convertToCSV(reviews, hotelName, hotelAddress, hotelRating, hotelDescription);
   fs.writeFileSync(`./output/${hotelName}_Booking.csv`, csvData);
 
   await browser.close();
